@@ -1,9 +1,12 @@
 package binar.ganda.challengechapter8.view
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -11,14 +14,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import binar.ganda.challengechapter8.R
+import binar.ganda.challengechapter8.model.ResponseUser
 import binar.ganda.challengechapter8.ui.theme.ChallengeChapter8Theme
+import binar.ganda.challengechapter8.viewmodel.UserViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class Register : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +39,7 @@ class Register : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting2("Android")
+                    DisplayRegister()
                 }
             }
         }
@@ -37,7 +47,11 @@ class Register : ComponentActivity() {
 }
 
 @Composable
-fun Greeting2(name: String) {
+private fun DisplayRegister() {
+
+    var mContext = LocalContext.current
+    val viewModelUser = viewModel(modelClass = UserViewModel::class.java)
+
     Column(
         modifier = Modifier.padding(15.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -49,12 +63,22 @@ fun Greeting2(name: String) {
             modifier = Modifier.padding(bottom = 40.dp)
         )
 
+        Spacer(modifier = Modifier.padding(20.dp))
+
+        Image(
+            painter = painterResource(id = R.drawable.movie_icon),
+            contentDescription = "image_icon",
+            modifier = Modifier.size(100.dp)
+        )
+
+        Spacer(modifier = Modifier.padding(10.dp))
+
         val mContent = LocalContext.current
         var username by remember { mutableStateOf("") }
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Enter Name") },
+            label = { Text("Enter Username") },
         )
 
         var name by remember { mutableStateOf("") }
@@ -73,11 +97,11 @@ fun Greeting2(name: String) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
 
-        var confirm_password by remember { mutableStateOf("") }
+        var confirmpassword by remember { mutableStateOf("") }
 
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
+            value = confirmpassword,
+            onValueChange = { confirmpassword = it },
             label = { Text("Enter Confirm password") },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
@@ -85,9 +109,40 @@ fun Greeting2(name: String) {
 
         Spacer(modifier = Modifier.padding(30.dp))
 
-        var mContext = LocalContext.current
+        val mContext = LocalContext.current
         Button(
-            onClick = { mContext.startActivity(Intent(mContext, Login::class.java))},
+            onClick = {
+                val registerUsername = username
+                val registerName = name
+                val registerPassword = password
+                val registerConfirmPassword = confirmpassword
+
+                if (registerUsername != "" && registerName != "" && registerPassword != "" && registerConfirmPassword != "") {
+                    if (registerPassword == registerConfirmPassword) {
+                        viewModelUser.insertNewUser(ResponseUser(
+                            "",
+                            "",
+                            "http://placeimg.com/640/480",
+                            registerName,
+                            registerPassword,
+                            "",
+                            registerUsername
+                        ))
+                        mContext.startActivity(Intent(mContext, Login::class.java))
+                    } else {
+                        Toast.makeText(
+                            mContext,
+                            "Password dan Confirm Password Harus Sama",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    Toast.makeText(mContext, "Ada field yang kosong", Toast.LENGTH_SHORT).show()
+                }
+
+            }
+
+                ,
             modifier = Modifier
                 .width(150.dp)
         ) {
@@ -96,10 +151,15 @@ fun Greeting2(name: String) {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(name = "Light Mode")
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+    name = "Dark Mode"
+)
 @Composable
 fun DefaultPreview2() {
     ChallengeChapter8Theme {
-        Greeting2("Android")
+        DisplayRegister()
     }
 }
